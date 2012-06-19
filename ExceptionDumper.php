@@ -1,7 +1,6 @@
 <?php
 /**
  *
- *
  */
 
 class ExceptionDumper
@@ -31,14 +30,24 @@ EOD;
         $stack_trace = '';
         foreach ($e->getTrace() as $stack_number => $stack) {
             $code = file($stack['file']);
-            $start = max(0, $e->getLine() - 10);
-            $end = min(count($code) - 1, $e->getLine() + 10);
+            $start = 0;
+            $end = count($code) - 1;
+            if (count($code) > 20) {
+                $start = max($start, $e->getLine() - 10);
+                $end = min($end, $e->getLine() + 10);
+            }
+            $place = strlen((string)$end);
             $disp_code = array();
             foreach (range($start, $end) as $index) {
-                $line_number = $index + 1;
-                $disp_code[] = "{$line_number}:" . $code[$index];
+                $line_number = sprintf("%0{$place}d", $index + 1);
+                $line_code = htmlspecialchars($code[$index], ENT_QUOTES);
+                if ($e->getLine() == ($index + 1)) {
+                    $disp_code[] = '<span style="color: red;">' . "{$line_number}:{$line_code}</span>";
+                } else {
+                    $disp_code[] = "{$line_number}:" . $line_code;
+                }
             }
-            $code_html = htmlspecialchars(implode('', $disp_code));
+            $code_html = implode('', $disp_code);
             $code_html = "<h2>#{$stack_number}</h2><pre>{$code_html}</pre>";
             $stack_trace .= $code_html;
         }
