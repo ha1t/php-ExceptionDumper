@@ -1,8 +1,8 @@
 <?php
 /**
  *
+ * TODO $stack['args']をうまいこと表示したい
  */
-
 class ExceptionDumper
 {
     public static function fetch(Exception $e)
@@ -29,27 +29,32 @@ EOD;
     {
         $stack_trace = '';
         foreach ($e->getTrace() as $stack_number => $stack) {
+            if (!file_exists($stack['file'])) {
+                $stack_trace .= "<h2>#{$stack_number}:{$stack['function']}</h2>" . PHP_EOL;
+                $stack_trace .= "<div>{$stack['file']}</div>";
+                continue;
+            }
             $code = file($stack['file']);
             $start = 0;
             $end = count($code) - 1;
             if (count($code) > 20) {
-                $start = max($start, $e->getLine() - 10);
-                $end = min($end, $e->getLine() + 10);
+                $start = max($start, $stack['line'] - 10);
+                $end = min($end, $stack['line'] + 10);
             }
             $place = strlen((string)$end);
             $disp_code = array();
             foreach (range($start, $end) as $index) {
                 $line_number = sprintf("%0{$place}d", $index + 1);
                 $line_code = htmlspecialchars($code[$index], ENT_QUOTES);
-                if ($e->getLine() == ($index + 1)) {
+                if ($stack['line'] == ($index + 1)) {
                     $disp_code[] = '<span style="color: red;">' . "{$line_number}:{$line_code}</span>";
                 } else {
                     $disp_code[] = "{$line_number}:" . $line_code;
                 }
             }
             $code_html = implode('', $disp_code);
-            $code_html = "<h2>#{$stack_number}</h2><pre>{$code_html}</pre>";
-            $stack_trace .= $code_html;
+            $stack_trace .= "<h2>#{$stack_number}:{$stack['function']}</h2>" . PHP_EOL;
+            $stack_trace .= "<div>{$stack['file']}</div><br /><pre>{$code_html}</pre>";
         }
 
         return $stack_trace;
