@@ -31,7 +31,9 @@ EOD;
         foreach ($e->getTrace() as $stack_number => $stack) {
             if (!file_exists($stack['file'])) {
                 $stack_trace .= "<h2>#{$stack_number}:{$stack['function']}</h2>" . PHP_EOL;
-                $stack_trace .= "<div>{$stack['file']}</div>";
+                if (isset($stack['file'])) {
+                    $stack_trace .= "<div>{$stack['file']}</div>";
+                }
                 continue;
             }
             $code = file($stack['file']);
